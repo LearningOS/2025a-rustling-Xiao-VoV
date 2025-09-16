@@ -1,8 +1,7 @@
 /*
-	heap
-	This question requires you to implement a binary heap function
+    heap
+    This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -37,7 +36,22 @@ where
     }
 
     pub fn add(&mut self, value: T) {
-        //TODO
+        // 将新元素添加到堆的末尾
+        self.count += 1;
+        self.items.push(value);
+
+        // 进行上浮操作
+        let mut idx = self.count;
+        while idx > 1 {
+            let parent_idx = self.parent_idx(idx);
+            if (self.comparator)(&self.items[idx], &self.items[parent_idx]) {
+                // 交换当前节点和父节点
+                self.items.swap(idx, parent_idx);
+                idx = parent_idx;
+            } else {
+                break;
+            }
+        }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -57,8 +71,24 @@ where
     }
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
-        //TODO
-		0
+        if !self.children_present(idx) {
+            return 0; // 没有子节点
+        }
+
+        let left_idx = self.left_child_idx(idx);
+        let right_idx = self.right_child_idx(idx);
+
+        // 如果只有左子节点
+        if right_idx > self.count {
+            return left_idx;
+        }
+
+        // 比较左右子节点，返回更符合comparator条件的那个
+        if (self.comparator)(&self.items[left_idx], &self.items[right_idx]) {
+            left_idx
+        } else {
+            right_idx
+        }
     }
 }
 
@@ -79,13 +109,38 @@ where
 
 impl<T> Iterator for Heap<T>
 where
-    T: Default,
+    T: Default + Clone,
 {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        //TODO
-		None
+        if self.is_empty() {
+            return None;
+        }
+
+        // 保存堆顶元素
+        let result = self.items[1].clone();
+
+        // 将最后一个元素移到堆顶
+        self.items[1] = self.items.pop().unwrap();
+        self.count -= 1;
+
+        // 如果堆不为空，进行下沉操作
+        if !self.is_empty() {
+            let mut idx = 1;
+            while self.children_present(idx) {
+                let child_idx = self.smallest_child_idx(idx);
+                if (self.comparator)(&self.items[child_idx], &self.items[idx]) {
+                    // 交换当前节点和子节点
+                    self.items.swap(idx, child_idx);
+                    idx = child_idx;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        Some(result)
     }
 }
 
